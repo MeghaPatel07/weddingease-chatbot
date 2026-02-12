@@ -4,6 +4,34 @@ const { toolSchemas, executeTool } = require('../tools');
 // Initialize Gemini with API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Available Gemini models in order of preference
+// If one hits rate limit (429), automatically fallback to next
+const MODEL_LIST = [
+  'gemini-2.5-flash',      // Primary: Latest and fastest
+  'gemini-2.5-flash-lite', // Secondary: Lighter version of primary
+  'gemini-2.0-flash',      // Tertiary: Stable previous generation
+  'gemini-2.0-flash-lite'  // Fallback: Lightest version
+];
+
+// Track current model index (can be updated on rate limit)
+let currentModelIndex = 0;
+
+const getCurrentModel = () => MODEL_LIST[currentModelIndex];
+
+const switchToNextModel = () => {
+  if (currentModelIndex < MODEL_LIST.length - 1) {
+    currentModelIndex++;
+    console.log(`[LLM] Switched to model: ${getCurrentModel()}`);
+    return true;
+  }
+  console.error('[LLM] No more models available in fallback list');
+  return false;
+};
+
+const resetModelIndex = () => {
+  currentModelIndex = 0;
+};
+
 // Convert OpenAI tool schemas to Gemini format
 function convertToolsToGemini(tools) {
   return tools.map(tool => ({
@@ -73,6 +101,18 @@ Format your responses with clear sections when presenting multiple options. Use 
  * @returns {object} Response with message and any tool calls made
  */
 async function processChat(userMessage, conversationHistory = [], context = {}) {
+  return await processChatWithModelFallback(userMessage, conversationHistory, context, 0);
+}
+
+/**
+ * Internal function to handle model fallback on rate limit
+ * @param {string} userMessage - User's message
+ * @param {array} conversationHistory - Previous messages
+ * @param {object} context - Session context
+ * @param {number} attemptNumber - Retry attempt count
+ * @returns {object} Response with message and any tool calls made
+ */
+async function processChatWithModelFallback(userMessage, conversationHistory = [], context = {}, attemptNumber = 0) {
   try {
     // Check if Gemini API key is configured
     if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your_gemini_api_key_here') {
@@ -86,9 +126,12 @@ async function processChat(userMessage, conversationHistory = [], context = {}) 
       contextMessage += `\n\nUser context: ${JSON.stringify(context)}`;
     }
 
+    const currentModel = getCurrentModel();
+    console.log(`[LLM] Using model: ${currentModel} (attempt ${attemptNumber + 1})`);
+
     // Initialize the model with tools
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: currentModel,
       systemInstruction: contextMessage,
       tools: geminiTools
     });
@@ -155,20 +198,33 @@ async function processChat(userMessage, conversationHistory = [], context = {}) 
         prompt_tokens: result.response.usageMetadata?.promptTokenCount || 0,
         completion_tokens: result.response.usageMetadata?.candidatesTokenCount || 0,
         total_tokens: result.response.usageMetadata?.totalTokenCount || 0
-      }
+      },
+      model: currentModel
     };
 
   } catch (error) {
-    console.error('[LLM] Error:', error);
+    console.error(`[LLM] Error with model ${getCurrentModel()}:`, error.message);
 
-    // Fallback response for API key issues, quota exceeded, or model not found
+    // Handle rate limit (429) - retry with next model
+    if (error.status === 429) {
+      console.log(`[LLM] Model ${getCurrentModel()} hit rate limit (429)`);
+      
+      if (switchToNextModel()) {
+        console.log(`[LLM] Retrying with fallback model: ${getCurrentModel()}`);
+        // Retry with the next model
+        return await processChatWithModelFallback(userMessage, conversationHistory, context, attemptNumber + 1);
+      } else {
+        console.error('[LLM] All models exhausted after rate limit');
+        console.log('[LLM] Falling back to mock response due to all models hitting quota');
+        return getMockResponse(userMessage);
+      }
+    }
+
+    // Fallback response for API key issues, model not found, or other errors
     if (error.message?.includes('API_KEY_INVALID') ||
       error.message?.includes('API key') ||
-      error.status === 429 ||
       error.status === 404 ||
-      error.message?.includes('429') ||
       error.message?.includes('404') ||
-      error.message?.includes('quota') ||
       error.message?.includes('not found')) {
       console.log('[LLM] Falling back to mock response due to API error');
       return getMockResponse(userMessage);
@@ -316,5 +372,10 @@ function extractContext(message) {
 
 module.exports = {
   processChat,
-  extractContext
+  extractContext,
+  // Model management (exported for testing/monitoring)
+  getCurrentModel,
+  switchToNextModel,
+  resetModelIndex,
+  MODEL_LIST
 };

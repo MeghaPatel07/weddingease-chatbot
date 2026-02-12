@@ -78,10 +78,12 @@ function ToolResult({ tool }) {
     navigator.clipboard.writeText(text);
   };
 
+  console.log(tool.result.results)
   // Search results
-  if (tool.tool === 'search_catalog' && tool.result.results) {
+  if (tool.tool === 'search_catalog' && tool.result.results && tool.result.results.length>0) {
     return (
       <div className="tool-card search-results">
+        
         <div className="tool-header">
           <span className="tool-icon">🔍</span>
           <span>Found {tool.result.total_count} results</span>

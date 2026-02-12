@@ -2,8 +2,7 @@
 
 An AI-powered chatbot that helps users plan and shop for an Indian wedding, featuring LLM-based conversations with tool integrations, session memory, and a soft paywall system.
 
-![WeddingEase](https://via.placeholder.com/800x400/c9a86c/ffffff?text=WeddingEase+Chatbot)
-
+ 
 ## 🌟 Features
 
 - **AI-Powered Conversations**: Natural language chat with GPT-4 for personalized wedding shopping advice
@@ -20,7 +19,7 @@ An AI-powered chatbot that helps users plan and shop for an Indian wedding, feat
 | **Frontend** | React + Vite |
 | **Styling** | Vanilla CSS |
 | **Backend** | Node.js + Express |
-| **LLM** | OpenAI GPT-4 |
+| **LLM** | Google Gemini 2.5 Flash |
 | **Auth** | JWT + Email OTP |
 
 ## 📦 Project Structure
@@ -35,15 +34,15 @@ weddingease-chatbot/
 │   └── index.html
 │
 ├── backend/           # Express API
-│   └── src/
-│       ├── controllers/  # Chat, Auth handlers
-│       ├── services/     # LLM, Session, Usage, Email
-│       ├── tools/        # 5 tool implementations
-│       ├── middleware/   # Auth, Rate limit, Policy
-│       ├── routes/       # API routes
-│       └── data/         # Mock catalog
-│
-└── docs/              # Documentation
+   └── src/
+       ├── controllers/  # Chat, Auth handlers
+       ├── services/     # LLM, Session, Usage, Email
+       ├── tools/        # 5 tool implementations
+       ├── middleware/   # Auth, Rate limit, Policy
+       ├── routes/       # API routes
+       └── data/         # Mock catalog
+
+
 ```
 
 ## 🚀 Quick Start
@@ -51,7 +50,7 @@ weddingease-chatbot/
 ### Prerequisites
 - Node.js 18+
 - npm or yarn
-- OpenAI API key (optional for demo mode)
+- Google Gemini API key
 
 ### 1. Clone & Install
 
@@ -65,12 +64,22 @@ cd backend && npm install
 cd ../frontend && npm install
 ```
 
-### 2. Configure Environment
+### 2. Configure Environment Variables
 
+**Backend:**
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY (get free key from https://aistudio.google.com/apikey)
+# Edit .env and add your GEMINI_API_KEY
+# Get free key from https://aistudio.google.com/apikey
+```
+
+**Frontend:**
+```bash
+cd frontend
+cp .env.example .env
+# The VITE_API_BASE_URL is pre-configured for localhost
+# Update for production: VITE_API_BASE_URL=https://your-api-server.com/api
 ```
 
 ### 3. Run Development Servers
@@ -85,7 +94,7 @@ cd frontend && npm run dev
 
 ### 4. Open the App
 
-Visit [http://localhost:5173](http://localhost:5173)
+Visit [https://weddingease-chatbot-2.onrender.com/](weddingease-chatbot-2.onrender.com)
 
 ## 🔧 Available Tools
 
@@ -124,10 +133,4 @@ Visit [http://localhost:5173](http://localhost:5173)
 - `POST /api/auth/verify-otp` - Verify and login
 - `GET /api/auth/me` - Get current user
 
-## 🧪 Testing
-
-See [docs/evaluation-set.md](docs/evaluation-set.md) for test prompts and expected responses.
-
-## 📄 License
-
-MIT
+ 
