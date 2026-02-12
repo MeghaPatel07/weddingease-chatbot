@@ -1,0 +1,178 @@
+{
+  "evaluation_set": {
+    "description": "Mini evaluation set for WeddingEase chatbot - 8+ test prompts with expected behaviors",
+    "version": "1.0",
+    "date": "2026-02-12",
+    "prompts": [
+      {
+        "id": 1,
+        "category": "catalog_search",
+        "prompt": "I need a bridal lehenga in traditional style within budget of ₹50,000 to ₹100,000 for my wedding in Mumbai",
+        "expected_tool": "search_catalog",
+        "expected_behavior": "Filter by: category=outfits, style=traditional, budget_min=50000, budget_max=100000, city=Mumbai",
+        "good_answer": "Bot should return 3-5 lehenga options with vendor names, prices, descriptions, and offer to provide more details or contact vendors. Example: '✨ Found 4 traditional bridal lehengas in Mumbai within your budget: 1) Raj Bridal House - ₹75,000 (heavy work) 2) Saree Palace - ₹65,000 (moderate work)...'",
+        "success_criteria": [
+          "Returns relevant lehenga results",
+          "Respects budget constraints (50K-100K)",
+          "Filters by traditional style",
+          "Shows vendor names and prices",
+          "Offers next steps (details, contact, save)"
+        ]
+      },
+      {
+        "id": 2,
+        "category": "item_details",
+        "prompt": "Tell me more about the Kundan bridal necklace from Jaipur Jewels - what's the weight, can it be customized?",
+        "expected_tool": "get_item_details",
+        "expected_behavior": "Fetch comprehensive details for the specific jewelry item including weight, customization options, care instructions, and vendor contact",
+        "good_answer": "Bot should provide detailed specs: 'This Kundan necklace weighs approximately 85g and is made with 22K gold backing. ✨ Features: - Customizable in different weights (80g-120g) - Available in 2-3 color variations - Care: Avoid direct water contact, store in dry cloth. 💬 Contact Jaipur Jewels at +91-XXXXX or I can arrange a call!'",
+        "success_criteria": [
+          "Provides weight specifications",
+          "Lists customization options",
+          "Includes care instructions",
+          "Shows vendor contact info",
+          "Offers to facilitate vendor contact"
+        ]
+      },
+      {
+        "id": 3,
+        "category": "delivery_feasibility",
+        "prompt": "I need the invitations by February 20th. Is that possible if I order today from Delhi vendor?",
+        "expected_tool": "get_delivery_date",
+        "expected_behavior": "Check delivery feasibility for February 20 from Delhi, considering processing time (2-3 days), preparation (3-5 days), and delivery (2-4 days)",
+        "good_answer": "Bot should assess feasibility: '⏰ Here's the timeline: Order today → Processing (2-3 days) → Design/Printing (4-5 days) → Delivery (2-3 days) = ~9-11 days total. ✅ YES, February 20 is FEASIBLE! This gives you 8 days from now. 🎯 Recommendation: Order within 24 hours to ensure buffer time for any revisions.'",
+        "success_criteria": [
+          "Calculates realistic timeline",
+          "Breaks down each stage (processing, printing, delivery)",
+          "Clearly states YES/NO feasibility",
+          "Provides buffer time recommendation",
+          "Suggests urgency if needed"
+        ]
+      },
+      {
+        "id": 4,
+        "category": "vendor_contact",
+        "prompt": "This lehenga looks perfect! Can you contact the vendor to check if they do rush delivery and custom stitching?",
+        "expected_tool": "send_contact_vendor",
+        "expected_behavior": "Send contact request to vendor with specific inquiries about rush delivery and custom stitching options",
+        "good_answer": "Bot should confirm: '📞 I'm sending a contact request to the vendor with your questions about rush delivery and custom stitching. Expected response time: 2-4 hours. ✅ They'll contact you at your registered email with availability and pricing. In the meanwhile, here are similar alternatives if you'd like to explore...'",
+        "success_criteria": [
+          "Confirms vendor contact request sent",
+          "Specifies questions forwarded",
+          "Sets expectation for response time",
+          "Shows customer contact method",
+          "Offers alternatives while waiting"
+        ]
+      },
+      {
+        "id": 5,
+        "category": "moodboard_generation",
+        "prompt": "Create a moodboard for a fusion wedding with modern minimalist style, gold accents, and floral themes",
+        "expected_tool": "generate_moodboard",
+        "expected_behavior": "Generate a cohesive visual collection showing fusion wedding aesthetic with modern minimalism, gold metallic elements, and botanical/floral design elements",
+        "good_answer": "Bot should create: '🎨 Fusion Minimalist Moodboard: [Visual reference showing] - Lehengas: Clean lines with subtle embroidery, gold borders - Jewelry: Geometric Kundan with fresh pearls - Invitations: Minimalist cards with gold foil & dried flowers - Décor: White/ivory florals with gold accents & greenery. 💡 Price estimate: ₹3-5L for complete look. Save this style or explore individual pieces?'",
+        "success_criteria": [
+          "Creates cohesive visual collection",
+          "Incorporates all requested themes (fusion, minimalist, gold, floral)",
+          "Shows multiple wedding categories (attire, jewelry, invites, décor)",
+          "Provides price estimate",
+          "Offers next actions"
+        ]
+      },
+      {
+        "id": 6,
+        "category": "shortlist_creation",
+        "prompt": "I really like the red lehenga from Saree Palace, the Kundan necklace, and those pearl earrings. Can I save these to compare later?",
+        "expected_tool": "create_shortlist",
+        "expected_behavior": "Create a shortlist with the 3 items and generate unique shortlist ID for sharing",
+        "good_answer": "Bot should confirm: '✅ Saved 3 items to your shortlist! 📋 Your Shortlist: [List items with prices] - Total: ₹1,25,000 🔗 Share with family/partner: [Unique shortlist link] 💬 Add feedback notes: \"Bride prefers this style\" - This will help vendors understand your preferences when you share!'",
+        "success_criteria": [
+          "Creates shortlist with multiple items",
+          "Shows clear itemization with prices",
+          "Generates shareable link",
+          "Calculates total price",
+          "Encourages sharing for feedback"
+        ]
+      },
+      {
+        "id": 7,
+        "category": "shortlist_sharing",
+        "prompt": "I want to share my saved list with my mom and fiancé to get their opinions",
+        "expected_tool": "share_shortlist",
+        "expected_behavior": "Generate sharable public link for the shortlist that enables non-authenticated users to view items and add feedback",
+        "good_answer": "Bot should provide: '💝 Share your shortlist! 📱 Copy this link & send to family: weddingease.com/shortlist/SL-20260212-ABC123 👥 They can: - View all items with prices & vendors - Add their feedback & comments - Share suggestions without needing an account ✉️ WhatsApp template: \"Check out my wedding picks & let me know what you think!\" [link]'",
+        "success_criteria": [
+          "Generates public shareable link",
+          "Specifies what others can see/do",
+          "No authentication required for viewers",
+          "Provides social sharing templates",
+          "Tracks conversion when family signs up"
+        ]
+      },
+      {
+        "id": 8,
+        "category": "multi_step_planning",
+        "prompt": "I'm looking for a complete bridal look for my destination wedding in Jaipur. Budget ₹2,00,000. I want traditional style with modern accessories. Need everything by March 15. Help me plan!",
+        "expected_tool": "Multiple tools: search_catalog → get_item_details → get_delivery_date → generate_moodboard → create_shortlist",
+        "expected_behavior": "Orchestrate complete planning flow: search for items, check delivery feasibility, visualize with moodboard, build shortlist",
+        "good_answer": "Bot should execute full flow: '🎯 Complete Bridal Ensemble Planning:\\n1️⃣ SEARCH: Found 6 traditional lehengas in Jaipur (₹80-120K)\\n2️⃣ VISUALIZE: Created moodboard with modern gold jewelry accompaniments\\n3️⃣ TIMELINE: March 15 deadline is ✅ FEASIBLE (25 days available)\\n4️⃣ BUNDLE: Lehenga + jewelry + accessories estimated ₹1,95,000\\n5️⃣ SAVED: Added to shortlist for family review\\n📞 Next: Shall I contact vendors for fitting appointments in Jaipur?'",
+        "success_criteria": [
+          "Orchestrates multiple tools seamlessly",
+          "Breaks down requirements into steps",
+          "Respects budget constraint",
+          "Confirms delivery feasibility",
+          "Creates visual reference",
+          "Saves items for review",
+          "Proactively suggests next actions"
+        ]
+      },
+      {
+        "id": 9,
+        "category": "edge_case_invalid_deadline",
+        "prompt": "I need my wedding dress by tomorrow",
+        "expected_tool": "get_delivery_date (should identify infeasibility)",
+        "expected_behavior": "Bot recognizes impossible timeline and offers realistic alternatives or rush options",
+        "good_answer": "Bot should handle gracefully: '⏰ Tomorrow is too tight for custom wedding attire - even rush orders need 3-5 days minimum for tailoring. 🎯 Alternatives: 1) Ready-made lehengas (available in 24hrs) 2) Rush express tailoring (₹5K extra, 48 hrs) 3) Rent designer attire. 📞 Which works best for your timeline?'",
+        "success_criteria": [
+          "Recognizes infeasible timeline",
+          "Doesn't provide false hope",
+          "Offers realistic alternatives",
+          "Shows cost implications",
+          "Asks for user preference"
+        ]
+      },
+      {
+        "id": 10,
+        "category": "personalization_and_budget_awareness",
+        "prompt": "Show me luxury bridal jewelry options but keep it under ₹30,000 for a student budget",
+        "expected_tool": "search_catalog with budget filter",
+        "expected_behavior": "Find items that balance luxury appeal with budget constraints; suggest value-for-money options",
+        "good_answer": "Bot should acknowledge budget: '💎 Premium jewelry under ₹30K - Great finds! 1) Pearl & Kundan set (₹28K) - Luxury look, affordable 2) Polki replica necklace (₹22K) - Similar sparkle 3) Gold-plated collection (₹18-25K) - Trending style. 💡 Pro tip: Consider renting some pieces (₹5-8K for event) to stretch your budget further! Save these options?'",
+        "success_criteria": [
+          "Respects strict budget constraint",
+          "Finds genuinely good value options",
+          "Explains luxury appeal despite price",
+          "Suggests alternatives (rental)",
+          "Shows budget-aware thinking"
+        ]
+      }
+    ],
+    "evaluation_guidelines": {
+      "tool_accuracy": "Did the bot use the correct tool for the query?",
+      "response_quality": "Is the answer helpful, accurate, and complete?",
+      "user_experience": "Does the bot guide the user to next steps?",
+      "constraint_handling": "Does the bot respect budget, timeline, and style preferences?",
+      "multi_step_orchestration": "Can the bot handle complex queries requiring multiple tools?",
+      "graceful_degradation": "How does the bot handle edge cases or infeasible scenarios?"
+    },
+    "tool_mapping": {
+      "search_catalog": "Find products by category, budget, style, city, vendor",
+      "get_item_details": "Detailed specs, customization, care for specific items",
+      "get_delivery_date": "Check timeline feasibility and delivery schedules",
+      "send_contact_vendor": "Facilitate vendor contact with specific inquiries",
+      "generate_moodboard": "Create visual collections and inspiration boards",
+      "create_shortlist": "Save items to list for comparison and sharing",
+      "share_shortlist": "Generate public links for family/partner feedback"
+    }
+  }
+}

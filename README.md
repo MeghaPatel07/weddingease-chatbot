@@ -45,7 +45,25 @@ weddingease-chatbot/
 
 ```
 
-## 🚀 Quick Start
+## � Reference Data & Evaluation Files
+
+### Test Prompts
+**[prompts.json](prompts.json)** - Mini evaluation set with 10+ test cases:
+- Sample user prompts for testing all chatbot features
+- Expected LLM tools for each prompt
+- Good answer examples and success criteria
+- Tool mapping reference guide
+- Use for validating chatbot responses and feature completeness
+
+### Product Catalog
+**[backend/src/data/mockCatalog.json](backend/src/data/mockCatalog.json)** - Mock wedding product database:
+- 20 curated products (jewelry, invitations, outfits, gifts, stationery)
+- 15 vendor profiles with ratings and response times
+- Delivery zone configurations for Indian cities
+- Real pricing, lead times, descriptions, and ratings
+- Powers the `search_catalog` and `get_item_details` tools
+
+## �🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
