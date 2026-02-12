@@ -107,7 +107,8 @@
 }
 
 .btn-login,
-.btn-logout {
+.btn-logout,
+.btn-saved-lists {
   padding: 8px 0;
   border: none;
   background: none;
@@ -123,7 +124,8 @@
 }
 
 .btn-login:hover,
-.btn-logout:hover {
+.btn-logout:hover,
+.btn-saved-lists:hover {
   color: var(--gold-light);
   border-bottom-color: var(--gold-light);
   background: none;

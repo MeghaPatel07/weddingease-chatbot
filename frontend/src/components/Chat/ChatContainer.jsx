@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
+import SavedListsModal from '../Shortlist/SavedListsModal';
 import './ChatContainer.css';
 import logo from '../../assets/logo.png';
 
@@ -15,6 +16,7 @@ function ChatContainer({
   onLogout
 }) {
   const [input, setInput] = useState('');
+  const [showSavedLists, setShowSavedLists] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -72,6 +74,9 @@ function ChatContainer({
           {user ? (
             <div className="user-menu">
               <span className="user-email">{user.email}</span>
+              {/* <button className="btn-saved-lists" onClick={() => setShowSavedLists(true)}>
+                📋 My Lists
+              </button> */}
               <button className="btn-logout" onClick={onLogout}>Logout</button>
             </div>
           ) : (
@@ -168,6 +173,12 @@ function ChatContainer({
         </div>
       </form>
 
+      {/* Saved Lists Modal */}
+      <SavedListsModal 
+        isOpen={showSavedLists} 
+        onClose={() => setShowSavedLists(false)}
+        userId={user?.id}
+      />
 
     </div>
   );

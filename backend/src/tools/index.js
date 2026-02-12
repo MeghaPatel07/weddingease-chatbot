@@ -3,6 +3,7 @@ const { getDeliveryDate, checkDeliveryFeasibility } = require('./getDeliveryDate
 const { getItemDetails } = require('./getItemDetails');
 const { sendContactVendor } = require('./sendContactVendor');
 const { generateMoodboard } = require('./generateMoodboard');
+const { saveToShortlist, viewShortlist, shareShortlist } = require('./createShortlist');
 
 // Tool definitions for OpenAI function calling
 const toolSchemas = [
@@ -131,6 +132,63 @@ const toolSchemas = [
         required: ['prompt']
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_shortlist',
+      description: 'Save selected wedding items to a shortlist that can be shared with family, partner, or vendors. This is a key feature for wedding planning and encourages user account creation.',
+      parameters: {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            description: 'Array of items to save. Each item should have: id, name, price, category, vendor, style',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'Product ID' },
+                name: { type: 'string', description: 'Product name' },
+                price: { type: 'number', description: 'Price in INR' },
+                category: { type: 'string', description: 'Product category' },
+                vendor: { type: 'string', description: 'Vendor name' },
+                style: { type: 'string', description: 'Style tag (e.g., traditional, modern, fusion)' }
+              }
+            }
+          },
+          title: {
+            type: 'string',
+            description: 'Optional title for the shortlist (e.g., "My Bridal Look")'
+          },
+          style: {
+            type: 'string',
+            description: 'Overall style theme of shortlist (traditional, modern, fusion)'
+          },
+          shortlistId: {
+            type: 'string',
+            description: 'Optional: ID of existing shortlist to add items to instead of creating new'
+          }
+        },
+        required: ['items']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'share_shortlist',
+      description: 'Make a shortlist public and get shareable link for comparing with partner or family members.',
+      parameters: {
+        type: 'object',
+        properties: {
+          shortlistId: {
+            type: 'string',
+            description: 'ID of the shortlist to make public and share'
+          }
+        },
+        required: ['shortlistId']
+      }
+    }
   }
 ];
 
@@ -157,6 +215,16 @@ function executeTool(toolName, args) {
     case 'generate_moodboard':
       return generateMoodboard(args.prompt);
     
+    case 'create_shortlist':
+      return saveToShortlist(args.items || [], {
+        title: args.title,
+        style: args.style,
+        shortlistId: args.shortlistId
+      });
+    
+    case 'share_shortlist':
+      return shareShortlist(args.shortlistId);
+    
     default:
       return { error: true, message: `Unknown tool: ${toolName}` };
   }
@@ -171,5 +239,8 @@ module.exports = {
   checkDeliveryFeasibility,
   getItemDetails,
   sendContactVendor,
-  generateMoodboard
+  generateMoodboard,
+  saveToShortlist,
+  viewShortlist,
+  shareShortlist
 };

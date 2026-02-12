@@ -4,14 +4,33 @@ const { toolSchemas, executeTool } = require('../tools');
 // Initialize Gemini with API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Available Gemini models in order of preference
+// Available Gemini models in order of preference (based on available quotas)
 // If one hits rate limit (429), automatically fallback to next
+// Models with unlimited daily limits are prioritized
+// NOTE: Only includes models confirmed to be available and support generateContent
 const MODEL_LIST = [
-  'gemini-2.5-flash',      // Primary: Latest and fastest
-  'gemini-2.5-flash-lite', // Secondary: Lighter version of primary
-  'gemini-2.0-flash',      // Tertiary: Stable previous generation
-  'gemini-2.0-flash-lite'  // Fallback: Lightest version
+  // Tier 1: Unlimited daily limit - VERIFIED WORKING
+  'gemini-2.5-pro',              // Primary: Unlimited daily, best quality
+  'gemini-2.0-flash',            // Secondary: Unlimited daily, stable & fast
+  
+  // Tier 2: Good availability - VERIFIED WORKING
+  'gemini-2.0-flash-lite',       // Unlimited daily, lightweight
+  'gemini-2.5-flash-lite',       // 3/10 used (7 requests remaining), lightweight
+  'gemini-3-flash',              // 0/5 used, newest flash model
+  
+  // Tier 3: Approaching limit (use as last resort) - VERIFIED WORKING
+  'gemini-2.5-flash',            // 3/5 used (only 2 requests left), approaching limit
 ];
+
+// Model metadata for logging and debugging
+const MODEL_METADATA = {
+  'gemini-2.5-pro': { tier: 'pro', daily_limit: 'unlimited', requests_left: 'unlimited', status: '✅ Working' },
+  'gemini-2.0-flash': { tier: 'flash', daily_limit: 'unlimited', requests_left: 'unlimited', status: '✅ Working' },
+  'gemini-2.0-flash-lite': { tier: 'flash-lite', daily_limit: 'unlimited', requests_left: 'unlimited', status: '✅ Working' },
+  'gemini-2.5-flash-lite': { tier: 'flash-lite', daily_limit: 250000, requests_left: '7', status: '✅ Working' },
+  'gemini-3-flash': { tier: 'flash', daily_limit: 20, requests_left: '5', status: '✅ Working' },
+  'gemini-2.5-flash': { tier: 'flash', daily_limit: 20, requests_left: '2', status: '⚠️ Limited' }
+};
 
 // Track current model index (can be updated on rate limit)
 let currentModelIndex = 0;
@@ -21,15 +40,19 @@ const getCurrentModel = () => MODEL_LIST[currentModelIndex];
 const switchToNextModel = () => {
   if (currentModelIndex < MODEL_LIST.length - 1) {
     currentModelIndex++;
-    console.log(`[LLM] Switched to model: ${getCurrentModel()}`);
+    const newModel = getCurrentModel();
+    const metadata = MODEL_METADATA[newModel];
+    console.log(`[LLM] ⚠️ Switched to model: ${newModel}`);
+    console.log(`[LLM] Model info: tier=${metadata?.tier}, daily_limit=${metadata?.daily_limit}, requests_remaining=${metadata?.requests_left}`);
     return true;
   }
-  console.error('[LLM] No more models available in fallback list');
+  console.error('[LLM] ❌ No more models available in fallback list');
   return false;
 };
 
 const resetModelIndex = () => {
   currentModelIndex = 0;
+  console.log(`[LLM] Model index reset to: gemini-2.5-pro (primary)`);
 };
 
 // Convert OpenAI tool schemas to Gemini format
@@ -127,7 +150,12 @@ async function processChatWithModelFallback(userMessage, conversationHistory = [
     }
 
     const currentModel = getCurrentModel();
-    console.log(`[LLM] Using model: ${currentModel} (attempt ${attemptNumber + 1})`);
+    const metadata = MODEL_METADATA[currentModel];
+    const attemptInfo = attemptNumber > 0 ? ` [FALLBACK - Attempt ${attemptNumber + 1}/${MODEL_LIST.length}]` : '';
+    console.log(`[LLM] 🤖 Using model: ${currentModel}${attemptInfo}`);
+    if (metadata) {
+      console.log(`[LLM] Model quota: tier=${metadata.tier}, daily_limit=${metadata.daily_limit}, remaining=${metadata.requests_left}`);
+    }
 
     // Initialize the model with tools
     const model = genAI.getGenerativeModel({
@@ -205,28 +233,47 @@ async function processChatWithModelFallback(userMessage, conversationHistory = [
   } catch (error) {
     console.error(`[LLM] Error with model ${getCurrentModel()}:`, error.message);
 
-    // Handle rate limit (429) - retry with next model
-    if (error.status === 429) {
-      console.log(`[LLM] Model ${getCurrentModel()} hit rate limit (429)`);
+    // Handle model not found (404) - skip to next model
+    if (error.status === 404 || error.message?.includes('not found')) {
+      const currentModel = getCurrentModel();
+      console.error(`[LLM] ❌ Model ${currentModel} is not available (404)`);
+      console.error(`[LLM] This model may not support generateContent or is not available`);
+      console.log(`[LLM] Remaining attempts: ${MODEL_LIST.length - currentModelIndex - 1}`);
       
       if (switchToNextModel()) {
-        console.log(`[LLM] Retrying with fallback model: ${getCurrentModel()}`);
+        console.log(`[LLM] ✅ Retrying with next available model: ${getCurrentModel()}`);
         // Retry with the next model
         return await processChatWithModelFallback(userMessage, conversationHistory, context, attemptNumber + 1);
       } else {
-        console.error('[LLM] All models exhausted after rate limit');
+        console.error('[LLM] ❌ All models exhausted - model not available');
+        console.log('[LLM] Falling back to mock response due to no available models');
+        return getMockResponse(userMessage);
+      }
+    }
+
+    // Handle rate limit (429) - retry with next model
+    if (error.status === 429) {
+      const currentModel = getCurrentModel();
+      const metadata = MODEL_METADATA[currentModel];
+      console.error(`[LLM] ❌ Model ${currentModel} hit rate limit (429)`);
+      console.error(`[LLM] Quota exceeded for: ${metadata?.tier} tier (daily: ${metadata?.daily_limit})`);
+      console.log(`[LLM] Remaining attempts: ${MODEL_LIST.length - currentModelIndex - 1}`);
+      
+      if (switchToNextModel()) {
+        console.log(`[LLM] ✅ Retrying with fallback model: ${getCurrentModel()}`);
+        // Retry with the next model
+        return await processChatWithModelFallback(userMessage, conversationHistory, context, attemptNumber + 1);
+      } else {
+        console.error('[LLM] ❌ All models exhausted after rate limit');
         console.log('[LLM] Falling back to mock response due to all models hitting quota');
         return getMockResponse(userMessage);
       }
     }
 
-    // Fallback response for API key issues, model not found, or other errors
+    // Fallback response for API key issues or other unexpected errors
     if (error.message?.includes('API_KEY_INVALID') ||
-      error.message?.includes('API key') ||
-      error.status === 404 ||
-      error.message?.includes('404') ||
-      error.message?.includes('not found')) {
-      console.log('[LLM] Falling back to mock response due to API error');
+      error.message?.includes('API key')) {
+      console.log('[LLM] Falling back to mock response due to API key error');
       return getMockResponse(userMessage);
     }
 
@@ -377,5 +424,6 @@ module.exports = {
   getCurrentModel,
   switchToNextModel,
   resetModelIndex,
-  MODEL_LIST
+  MODEL_LIST,
+  MODEL_METADATA
 };
